@@ -11,6 +11,7 @@ public class CoffeeMachine : MonoBehaviour
     public GameObject kahve;
     public GameObject kurabiye;
     public GameObject tabak;
+    public ParticleSystem coffeeParticle;
     
     private bool isBrewing = false;
     private bool coffeeReady = false;
@@ -48,6 +49,12 @@ public class CoffeeMachine : MonoBehaviour
         coffeeReady = true;
         SetVisualState("Ready");
         Debug.Log("Coffee is Ready! Click to sell.");
+
+        if (coffeeParticle != null)
+        {
+            coffeeParticle.Stop();
+            coffeeParticle.Play();
+        }
 
         if (isAutomatic)
         {

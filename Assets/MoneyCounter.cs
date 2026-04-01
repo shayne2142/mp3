@@ -4,6 +4,8 @@ using TMPro;
 public class MoneyCounter : MonoBehaviour
 {
     public TextMeshProUGUI moneyDisplay;
+    public ParticleSystem moneyParticle;
+
     public float moneyCount = 0f;
     public float multiplier = 1.0f;
     public float passiveRate = 0.5f;
@@ -18,6 +20,11 @@ public class MoneyCounter : MonoBehaviour
     public void AddMoney(float amount)
     {
         moneyCount += amount * multiplier;
+        if (moneyParticle != null)
+        {
+            moneyParticle.Stop();
+            moneyParticle.Play();
+        }
     }
 
     public void Update()

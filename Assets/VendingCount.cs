@@ -4,6 +4,8 @@ using TMPro;
 public class VendingCount : MonoBehaviour
 {
     public TextMeshProUGUI vendingDisplay;
+    public ParticleSystem coffeeParticle;
+
     public float totalVendingsSold = 0f;
     public float passiveRate = 0.1f;
     public GameObject vendingTrophy;
@@ -29,6 +31,11 @@ public class VendingCount : MonoBehaviour
     public void RegisterSale(float count)
     {
         totalVendingsSold += count;
+        if (coffeeParticle != null)
+        {
+            coffeeParticle.Stop();
+            coffeeParticle.Play();
+        }
     }
 
     public void SetZero()

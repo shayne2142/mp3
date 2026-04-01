@@ -4,6 +4,8 @@ using TMPro;
 public class CoffeeCounter : MonoBehaviour
 {
     public TextMeshProUGUI coffeeDisplay;
+    public ParticleSystem coffeeParticle;
+
     public int totalCoffeesSold = 0;
     public GameObject coffeeTrophy;
     private bool trophyAwarded = false;
@@ -12,6 +14,11 @@ public class CoffeeCounter : MonoBehaviour
     {
         totalCoffeesSold++;
         UpdateUI();
+        if (coffeeParticle != null)
+        {
+            coffeeParticle.Stop();
+            coffeeParticle.Play();
+        }
         CheckTrophy();
     }
 
