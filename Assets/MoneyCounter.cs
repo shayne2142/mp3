@@ -12,6 +12,8 @@ public class MoneyCounter : MonoBehaviour
     public GameObject revenueTrophy;
     private bool trophyAwarded = false;
 
+    public ParticleSystem moneyTrophyParticle;
+
     void Start()
     {
         UpdateUI();
@@ -43,6 +45,12 @@ public class MoneyCounter : MonoBehaviour
         {
             trophyAwarded = true;
             revenueTrophy.SetActive(true);
+            if (moneyTrophyParticle != null)
+            {
+                moneyTrophyParticle.Stop();
+                moneyTrophyParticle.Play();
+            }
+
             Debug.Log("Revenue Trophy Unlocked!");
         }
     }

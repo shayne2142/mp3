@@ -10,10 +10,17 @@ public class VendingCount : MonoBehaviour
     public float passiveRate = 0.1f;
     public GameObject vendingTrophy;
     private bool trophyAwarded = false;
+    private bool hasSetZero = false;
+
+    public ParticleSystem vendingTrophyParticle;
 
     public void Update()
     {
         totalVendingsSold += passiveRate * Time.deltaTime;
+        if (totalVendingsSold >= 900f && !hasSetZero)
+        {
+            Reset();
+        }
         UpdateUI();
         CheckTrophy();
     }
@@ -24,6 +31,11 @@ public class VendingCount : MonoBehaviour
         {
             trophyAwarded = true;
             vendingTrophy.SetActive(true);
+            if (vendingTrophyParticle != null)
+            {
+                vendingTrophyParticle.Stop();
+                vendingTrophyParticle.Play();
+            }
             Debug.Log("Vending Trophy Unlocked!");
         }
     }
@@ -38,9 +50,15 @@ public class VendingCount : MonoBehaviour
         }
     }
 
+    private void Reset() // internal reset so that the trophy doesn't get activated before the player has unlocked vending machines
+    {
+        totalVendingsSold = 0f;
+    }
+
     public void SetZero()
     {
         totalVendingsSold = 0f;
+        hasSetZero = true;
     }
 
     void UpdateUI()

@@ -10,6 +10,8 @@ public class CoffeeCounter : MonoBehaviour
     public GameObject coffeeTrophy;
     private bool trophyAwarded = false;
 
+    public ParticleSystem coffeeTrophyParticle;
+
     public void RegisterSale()
     {
         totalCoffeesSold++;
@@ -28,6 +30,11 @@ public class CoffeeCounter : MonoBehaviour
         {
             trophyAwarded = true;
             coffeeTrophy.SetActive(true);
+            if (coffeeTrophyParticle != null)
+            {
+                coffeeTrophyParticle.Stop();
+                coffeeTrophyParticle.Play();
+            }
             Debug.Log("Coffee Trophy Unlocked!");
         }
     }
