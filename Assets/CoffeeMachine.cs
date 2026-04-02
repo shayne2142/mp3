@@ -17,6 +17,9 @@ public class CoffeeMachine : MonoBehaviour
     private bool coffeeReady = false;
     private MoneyCounter moneyManager;
     private CoffeeCounter coffeeCount;
+    [Header("coffeeAudio")]
+    public AudioSource coffeeAudioSource; // The speaker in the 3D world
+    public AudioClip coffeePurchaseSound;     // The  building sound
 
     void Start()
     {
@@ -72,6 +75,10 @@ public class CoffeeMachine : MonoBehaviour
         coffeeReady = false;
         SetVisualState("Idle");
         Debug.Log("Coffee Sold!");
+        if (coffeeAudioSource != null && coffeePurchaseSound != null)
+        {
+            coffeeAudioSource.PlayOneShot(coffeePurchaseSound);
+        }
     }
 
     void SetVisualState(string state)

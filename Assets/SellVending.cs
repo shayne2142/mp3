@@ -10,6 +10,10 @@ public class SellVending : MonoBehaviour
     private MoneyCounter moneyManager;
     private VendingCount vendingCount;
 
+    [Header("vendingAudio")]
+    public AudioSource vendingAudioSource; // The speaker in the 3D world
+    public AudioClip vendingPurchaseSound;     // The  building sound
+
     void Start()
     {
         moneyManager = Object.FindFirstObjectByType<MoneyCounter>();
@@ -34,6 +38,10 @@ public class SellVending : MonoBehaviour
     {
         moneyManager.AddMoney(vendValue);
         vendingCount.RegisterSale(vendCount);
+        if (vendingAudioSource != null && vendingPurchaseSound != null)
+        {
+            vendingAudioSource.PlayOneShot(vendingPurchaseSound);
+        }
     }
 
     public void multiplyValue(float multiplier)

@@ -1,5 +1,7 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.XR; 
+using System.Collections.Generic;
 
 public class CoffeeShopManager : MonoBehaviour
 {
@@ -61,6 +63,8 @@ public class CoffeeShopManager : MonoBehaviour
     public float[] powerUpPrices = {2000, 10000};
     public TextMeshProUGUI powerUpDisplay;
 
+
+
     [Header("Wall Audio")]
     public AudioSource wallAudioSource; // The speaker in the 3D world
     public AudioClip purchaseSound;     // The  building sound
@@ -77,6 +81,21 @@ public class CoffeeShopManager : MonoBehaviour
     public AudioSource vendingAudioSource; // The speaker in the 3D world
     public AudioClip vendingPurchaseSound;     // The  building sound
 
+    [Header("powerupAudio")]
+    public AudioSource powerupAudioSource; // The speaker in the 3D world
+    public AudioClip powerupPurchaseSound;     // The  building sound
+
+
+    [Header("Particle Effects")]
+    public ParticleSystem machine2Particles;
+    public ParticleSystem machine3Particles;
+    public ParticleSystem upgraded1Particles;
+    public ParticleSystem upgraded2Particles;
+    public ParticleSystem wallParticles;
+    public ParticleSystem vending1Particles;
+    public ParticleSystem vending2Particles;
+    public ParticleSystem vending3Particles;
+    public ParticleSystem powerupParticles;
     void Start()
     {
         moneySystem = Object.FindFirstObjectByType<MoneyCounter>();
@@ -99,7 +118,21 @@ public class CoffeeShopManager : MonoBehaviour
         wallPurchasePrompt.SetActive(false);
         vendingStatsDisplay.SetActive(false);
     }
+    public void TriggerHapticFeedback(float amplitude, float duration)
+    {
+        // Get all currently connected VR controllers
+        List<InputDevice> devices = new List<InputDevice>();
+        InputDevices.GetDevicesWithCharacteristics(InputDeviceCharacteristics.Controller, devices);
 
+        foreach (var device in devices)
+        {
+            // Check if the controller supports vibration, then trigger it
+            if (device.TryGetHapticCapabilities(out HapticCapabilities capabilities) && capabilities.supportsImpulse)
+            {
+                device.SendHapticImpulse(0, amplitude, duration);
+            }
+        }
+    }
     public void AttemptPurchaseMachine2()
     {
         if (moneySystem.moneyCount >= priceForMachine2 && !machine2Bought)
@@ -108,14 +141,16 @@ public class CoffeeShopManager : MonoBehaviour
             machine2Bought = true;
             machine2RealVisual.SetActive(true);
             machine2Ghost.SetActive(false);
-            
-            machine3Ghost.SetActive(true);
 
+            StartCoroutine(SquishAndBounce(machine2RealVisual.transform));
+            machine3Ghost.SetActive(true);
+            TriggerHapticFeedback(0.5f, 0.5f);
             moneySystem.AddPassiveRate(passiveNormal);
             if (coffeeMachineAudioSource != null && coffeeMachinePurchaseSound != null)
             {
                 coffeeMachineAudioSource.PlayOneShot(coffeeMachinePurchaseSound);
             }
+            if (machine2Particles != null) machine2Particles.Play();
         }
         else 
         {
@@ -132,13 +167,15 @@ public class CoffeeShopManager : MonoBehaviour
             machine3RealVisual.SetActive(true);
             machine3Ghost.SetActive(false);
 
+            StartCoroutine(SquishAndBounce(machine3RealVisual.transform));
             upgraded1Ghost.SetActive(true);
-
+            TriggerHapticFeedback(0.5f, 0.5f);
             moneySystem.AddPassiveRate(passiveNormal);
             if (coffeeMachineAudioSource != null && coffeeMachinePurchaseSound != null)
             {
                 coffeeMachineAudioSource.PlayOneShot(coffeeMachinePurchaseSound);
             }
+            if (machine3Particles != null) machine3Particles.Play();
         }
         else if (!machine2Bought)
         {
@@ -158,15 +195,16 @@ public class CoffeeShopManager : MonoBehaviour
             upgraded1Bought = true;
             upgraded1RealVisual.SetActive(true);
             upgraded1Ghost.SetActive(false);
-
+            StartCoroutine(SquishAndBounce(upgraded1RealVisual.transform));
             upgraded2Ghost.SetActive(true);
 
             moneySystem.AddPassiveRate(passiveUpgraded);
-
+            TriggerHapticFeedback(0.5f, 0.5f);
             if (coffeeMachineUpgradedAudioSource != null && coffeeMachineUpgradedPurchaseSound != null)
             {
                 coffeeMachineUpgradedAudioSource.PlayOneShot(coffeeMachineUpgradedPurchaseSound);
             }
+            if (upgraded1Particles != null) upgraded1Particles.Play();
         }
         else if (!machine3Bought)
         {
@@ -185,6 +223,8 @@ public class CoffeeShopManager : MonoBehaviour
             moneySystem.moneyCount -= priceForUpgraded2;
             upgraded2Bought = true;
             upgraded2RealVisual.SetActive(true);
+
+            StartCoroutine(SquishAndBounce(upgraded2RealVisual.transform));
             upgraded2Ghost.SetActive(false);
             moneySystem.AddPassiveRate(passiveUpgraded);
 
@@ -192,11 +232,12 @@ public class CoffeeShopManager : MonoBehaviour
             realWall.SetActive(false);
             ghostWall.SetActive(true);
             wallPurchasePrompt.SetActive(true);
-
+            TriggerHapticFeedback(0.5f, 0.5f);
             if (coffeeMachineUpgradedAudioSource != null && coffeeMachineUpgradedPurchaseSound != null)
             {
                 coffeeMachineUpgradedAudioSource.PlayOneShot(coffeeMachineUpgradedPurchaseSound);
             }
+            if (upgraded2Particles != null) upgraded2Particles.Play();
         }
         else if (!upgraded1Bought)
         {
@@ -210,20 +251,26 @@ public class CoffeeShopManager : MonoBehaviour
 
     public void AttemptPurchaseWall()
     {
-        if (upgraded2Bought && moneySystem.moneyCount >= priceForWall)
+        if (upgraded2Bought && moneySystem.moneyCount >= priceForWall && !wallBought)
         {
             Debug.Log("Wall purchased!");
             moneySystem.moneyCount -= priceForWall;
-            ghostWall.SetActive(false);
-            wallPurchasePrompt.SetActive(false);
-            vendingStatsDisplay.SetActive(true);
             wallBought = true;
 
+            
+            StartCoroutine(SquishAndBounce(ghostWall.transform, true, 0.01f, 10f));
+
+            wallPurchasePrompt.SetActive(false);
+            vendingStatsDisplay.SetActive(true);
+
             vending1Ghost.SetActive(true);
+            TriggerHapticFeedback(0.9f, 2f);
+
             if (wallAudioSource != null && purchaseSound != null)
             {
                 wallAudioSource.PlayOneShot(purchaseSound);
             }
+            if (wallParticles != null) wallParticles.Play();
         }
     }
 
@@ -237,7 +284,7 @@ public class CoffeeShopManager : MonoBehaviour
             vendingSystem.SetZero();
             vending1Real.GetComponent<SellVending>().ActivateMachine();
             vending1Ghost.SetActive(false);
-
+            StartCoroutine(SquishAndBounce(vending1Real.transform));
             vending2Ghost.SetActive(true);
 
             moneySystem.AddPassiveRate(passiveVending);
@@ -247,11 +294,12 @@ public class CoffeeShopManager : MonoBehaviour
                 powerUpDisplay.text = "Vending Sell Price x2 \n Cost: $" + powerUpPrices[1].ToString("F2");
                 Powerups.SetActive(true);
             }
-
+            TriggerHapticFeedback(0.5f, 0.5f);
             if (vendingAudioSource != null && vendingPurchaseSound != null)
             {
                 vendingAudioSource.PlayOneShot(vendingPurchaseSound);
             }
+            if (vending1Particles != null) vending1Particles.Play();
         }
         else if (!wallBought)
         {
@@ -272,15 +320,16 @@ public class CoffeeShopManager : MonoBehaviour
             vending2Real.SetActive(true);
             vending2Real.GetComponent<SellVending>().ActivateMachine();
             vending2Ghost.SetActive(false);
-
+            StartCoroutine(SquishAndBounce(vending2Real.transform));
             vending3Ghost.SetActive(true);
 
             moneySystem.AddPassiveRate(passiveVending);
-
+            TriggerHapticFeedback(0.5f, 0.5f);
             if (vendingAudioSource != null && vendingPurchaseSound != null)
             {
                 vendingAudioSource.PlayOneShot(vendingPurchaseSound);
             }
+            if (vending2Particles != null) vending2Particles.Play();
         }
         else if (!vending1Bought)
         {
@@ -300,13 +349,14 @@ public class CoffeeShopManager : MonoBehaviour
             vending3Real.SetActive(true);
             vending3Real.GetComponent<SellVending>().ActivateMachine();
             vending3Ghost.SetActive(false);
-
+            StartCoroutine(SquishAndBounce(vending3Real.transform));
             moneySystem.AddPassiveRate(passiveVending);
-
+            TriggerHapticFeedback(0.5f, 0.5f);
             if (vendingAudioSource != null && vendingPurchaseSound != null)
             {
                 vendingAudioSource.PlayOneShot(vendingPurchaseSound);
             }
+            if (vending3Particles != null) vending3Particles.Play();
         }
         else if (!vending2Bought)
         {
@@ -325,6 +375,12 @@ public class CoffeeShopManager : MonoBehaviour
             moneySystem.moneyCount -= powerUpPrices[PowerupNumber];
             PowerupNumber++;
 
+            TriggerHapticFeedback(0.8f, 2f);
+            if (powerupAudioSource != null && powerupPurchaseSound != null)
+            {
+                powerupAudioSource.PlayOneShot(powerupPurchaseSound);
+            }
+            if (powerupParticles != null) powerupParticles.Play();
             CoffeeMachine[] machines = {machine1Real.GetComponentInChildren<CoffeeMachine>(), 
                                         machine2RealVisual.GetComponentInChildren<CoffeeMachine>(), 
                                         machine3RealVisual.GetComponentInChildren<CoffeeMachine>(), 
@@ -353,7 +409,12 @@ public class CoffeeShopManager : MonoBehaviour
         {
             moneySystem.moneyCount -= powerUpPrices[1];
             PowerupNumber++;
-
+            TriggerHapticFeedback(0.8f, 2f);
+            if (powerupAudioSource != null && powerupPurchaseSound != null)
+            {
+                powerupAudioSource.PlayOneShot(powerupPurchaseSound);
+            }
+            if (powerupParticles != null) powerupParticles.Play();
             SellVending[] machines = {vending1Real.GetComponent<SellVending>(), 
                                       vending2Real.GetComponent<SellVending>(), 
                                       vending3Real.GetComponent<SellVending>()};
@@ -374,4 +435,39 @@ public class CoffeeShopManager : MonoBehaviour
             Debug.Log("All Power Ups bought");
         }
     }
+
+    // This Coroutine handles the math for the bounce animation
+    private System.Collections.IEnumerator SquishAndBounce(Transform target, bool disableWhenFinished = false, float squishY = 0.5f, float bulgeXZ = 1.2f)
+    {
+        Vector3 originalScale = target.localScale;
+
+        
+        Vector3 squishedScale = new Vector3(originalScale.x * bulgeXZ, originalScale.y * squishY, originalScale.z * bulgeXZ);
+
+        target.localScale = squishedScale;
+
+        float velocity = 0f;
+        float currentValue = 0f;
+        float goalValue = 1f;
+        float stiffness = 200f;
+        float damping = 15f;
+
+        while (Mathf.Abs(goalValue - currentValue) > 0.001f || Mathf.Abs(velocity) > 0.001f)
+        {
+            float acceleration = (stiffness * (goalValue - currentValue)) - (damping * velocity);
+            velocity += acceleration * Time.deltaTime;
+            currentValue += velocity * Time.deltaTime;
+
+            target.localScale = Vector3.LerpUnclamped(squishedScale, originalScale, currentValue);
+            yield return null;
+        }
+
+        target.localScale = originalScale;
+
+        if (disableWhenFinished)
+        {
+            target.gameObject.SetActive(false);
+        }
+    }
+
 }
